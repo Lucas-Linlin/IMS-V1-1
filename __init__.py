@@ -172,6 +172,7 @@ def main():
     print(TIPS_INFO)
     logister()
     readInfo()
+    # Main loop
     keep_going = True
     while keep_going:
         command = input('>>> ')

@@ -19,6 +19,8 @@ def GUI_add():
     window.mainloop()
 
 def main():
+    logister()
+    readInfo()
     root = Tk()
     root.title("仓储物品管理系统")
     root.geometry("1000x600")

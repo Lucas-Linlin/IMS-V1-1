@@ -33,5 +33,9 @@
     "papa": {
         "password": "qaz",
         "things": {}
+    },
+    "u1": {
+        "password": "1234",
+        "things": {}
     }
 }
