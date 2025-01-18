@@ -7,6 +7,8 @@ from pathlib import Path
 import json
 import os
 import bcrypt
+from datetime import datetime
+from time import time
 
 rootPath = Path(__file__).parent
 things = {}
@@ -25,6 +27,18 @@ def check_password(password: str, hashed_password: bytes) -> bool:
     # 验证密码
     return bcrypt.checkpw(password_bytes, hashed_password)
 '''
+def initLog():
+    global START
+    START = time()
+    with open(rootPath / 'logs.log', 'w') as file:
+        file.write(f'At {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} Program started.')
+
+def log(log:str):
+    current = time()
+    elapsed = (current - START) * 1000
+    with open(rootPath / 'logs.log', 'a') as file:
+        file.write(f"[{elapsed:.2f}ms] {log}\n")
+
 def readInfo():
     global FILE, things, user
     with open(rootPath / f'users.json') as file:
@@ -113,7 +127,7 @@ def login(usr:str, psw:str, num:int=3):
             global user
             user = usr
             print('Login successful.')
-            print('Hello, ', user)
+            print('Hello,', user)
             return
         else:
             if num == 0:
@@ -170,12 +184,17 @@ def logister():
             logister()
 
 def main():
+    initLog()
     print(TIPS_INFO)
+    log(f'Program started.')
     logister()
+    log(f'User {user} logged in.')
     readInfo()
+    log('Data loaded.')
     # Main loop
     keep_going = True
     while keep_going:
+        log('Main loop started.')
         command = input('>>> ')
         match command.lower():
             case 'add' | 'a':
