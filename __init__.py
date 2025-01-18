@@ -113,6 +113,7 @@ def login(usr:str, psw:str, num:int=3):
             global user
             user = usr
             print('Login successful.')
+            print('Hello, ', user)
             return
         else:
             if num == 0:
