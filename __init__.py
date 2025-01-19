@@ -30,14 +30,14 @@ def check_password(password: str, hashed_password: bytes) -> bool:
 def initLog():
     global START
     START = time()
-    with open(rootPath / 'logs.log', 'w') as file:
-        file.write(f'At {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} Program started.')
+    with open(rootPath / 'logs.log', 'w', encoding='utf-8') as file:
+        file.write(f'程序在 {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 启动。\n')
 
 def log(log:str):
     current = time()
-    elapsed = (current - START) * 1000
-    with open(rootPath / 'logs.log', 'a') as file:
-        file.write(f"[{elapsed:.2f}ms] {log}\n")
+    elapsed = int((current - START) * 1000)
+    with open(rootPath / 'logs.log', 'a', encoding='utf-8') as file:
+        file.write(f"[{elapsed} ms] {log}\n")
 
 def readInfo():
     global FILE, things, user
@@ -46,6 +46,7 @@ def readInfo():
         things = FILE[user]["things"]
 
 def add(index, value):
+    log(f'用户添加某物。')
     global FILE, things, user
     try:
         things[index][value] += 1
@@ -56,10 +57,11 @@ def add(index, value):
             things[index] = {value:1}
     FILE[user]["things"] = things
     with open(rootPath / f'users.json', 'w') as file:
-        json.dump(FILE, file, indent=4, sort_keys=True)
-    print(f'{value} added to {index}.')
+        print(f'{value} added to {index}。')
+    log('添加成功。')
 
 def delete(index, value):
+    log(f'用户删除某物。')
     global things, user
     if index not in things.keys():
         print(f'Index "{index}" does not exist.')
@@ -77,8 +79,10 @@ def delete(index, value):
     with open(rootPath / f'users.json', 'w') as file:
         json.dump(FILE, file, indent=4, sort_keys=True)
     print(f'{value} deleted from {index}.')
+    log('删除成功。')
 
 def search(value):
+    log(f'用户搜索某物。')
     global things
     found = {} # {address: count, ...}
     returnStr = ''
@@ -88,22 +92,27 @@ def search(value):
                 found[i] = things[i][j]
                 returnStr += f'At {i}: {things[i][j]}*{j}\n'
     if returnStr == '':
+        log('无结果。')
         print('No results.')
         return 0,''
     else:
         print(f'Found:')
         print(returnStr[:-1])
+        log('搜索成功。')
     return len(found), returnStr
 
 def query(index):
+    log(f'用户查询某索引。')
     global things
     if index in things.keys():
+        log('查询成功。')
         print('-'*20)
         for value in things[index].keys():
             print(f'{value}*{things[index][value]}')
         print('-'*20)
     else:
         print(f'Index "{index}" does not exist.')
+        log('无结果。')
 
 def display():
     global things
@@ -120,10 +129,12 @@ def display():
         print(f'Total: {sum(sum(things[i].values()) for i in things.keys())} items in {len(things)} indexes.')
 
 def login(usr:str, psw:str, num:int=3):
+    log(f'用户 {usr} 想要登录。')
     with open(rootPath / 'users.json') as file:
         users:dict = json.loads(file.read())
     if usr in users.keys():
         if psw == users[usr]["password"]:
+            log(f'用户 {usr} 登录成功。')
             global user
             user = usr
             print('Login successful.')
@@ -131,8 +142,11 @@ def login(usr:str, psw:str, num:int=3):
             return
         else:
             if num == 0:
+                log(f'用户 {usr} 尝试3次，登录失败。')
                 print('Sorry, login failed.')
+                log('程序退出。')
                 exit()
+            log(f'用户 {usr} 尝试 {num} 次，登录失败。')
             print('Invalid username or password.')
             usr = input('Username: ')
             psw = input('Password: ')
@@ -152,12 +166,14 @@ def logister():
     choice = input('>>> ')
     match choice.lower():
         case 'l' | 'login':
+            log('某人想要登录。')
             usr = input('Username: ')
             psw = input('Password: ')
             user = usr
             login(usr, psw)
             return
         case 'r' |'register':
+            log('某人想要注册。')
             usr = input('Username: ')
             psw = input('Password: ')
             confirm_psw = input('Confirm Password: ')
@@ -178,6 +194,7 @@ def logister():
                 login(usr, psw)
                 return
         case 'e' | 'exit':
+            log('程序结束。')
             exit()
         case _:
             print('Invalid choice.')
@@ -188,13 +205,12 @@ def main():
     print(TIPS_INFO)
     log(f'Program started.')
     logister()
-    log(f'User {user} logged in.')
     readInfo()
-    log('Data loaded.')
+    log('数据文件加载。')
     # Main loop
     keep_going = True
+    log('主循环开始。')
     while keep_going:
-        log('Main loop started.')
         command = input('>>> ')
         match command.lower():
             case 'add' | 'a':
@@ -259,6 +275,7 @@ search, s, sc, find, fd, f - Search for an item.
 ===========================================================''')
 
             case 'exit' | 'quit':
+                log('程序结束。')
                 keep_going = False
 
             case _:
