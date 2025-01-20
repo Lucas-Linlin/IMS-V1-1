@@ -203,7 +203,7 @@ def logister():
 def main():
     initLog()
     print(TIPS_INFO)
-    log(f'Program started.')
+    log('程序启动。')
     logister()
     readInfo()
     log('数据文件加载。')
