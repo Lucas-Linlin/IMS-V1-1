@@ -1,1 +1,1 @@
-pyinstaller -i "ICON-128.ico" "__init__.py"
+pyinstaller -i "ICON-128.ico" --distpath ".\Program" "__init__.py"

@@ -130,8 +130,13 @@ def display():
 
 def login(usr:str, psw:str, num:int=3):
     log(f'用户 {usr} 想要登录。')
-    with open(rootPath / 'users.json') as file:
-        users:dict = json.loads(file.read())
+    try:
+        with open(rootPath / 'users.json') as file:
+            users:dict = json.loads(file.read())
+    except FileNotFoundError:
+        log('用户数据文件不存在。')
+        log('程序退出。')
+        exit()
     if usr in users.keys():
         if psw == users[usr]["password"]:
             log(f'用户 {usr} 登录成功。')
