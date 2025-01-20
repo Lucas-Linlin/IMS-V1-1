@@ -12,21 +12,7 @@ from time import time
 
 rootPath = Path(__file__).parent
 things = {}
-'''
-def hash_password(password: str) -> bytes:
-    # 将密码转换为字节类型
-    password_bytes = password.encode('utf-8')
-    # 生成盐并哈希密码
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password_bytes, salt)
-    return hashed_password
 
-def check_password(password: str, hashed_password: bytes) -> bool:
-    # 将密码转换为字节类型
-    password_bytes = password.encode('utf-8')
-    # 验证密码
-    return bcrypt.checkpw(password_bytes, hashed_password)
-'''
 def initLog():
     global START
     START = time()
