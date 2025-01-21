@@ -1,7 +1,11 @@
 #!python3
 
-TIPS_INFO = '''Item Management System V1.5.0
-Made by zhilin.tang@qq.com'''
+__version__ = '1.5.0'
+TIPS_INFO = f'''Item Management System(IMS) V{__version__}
+Made by zhilin.tang@qq.com
+
+仓储物品管理系统(物品管家) V{__version__}
+作者：zhilin.tang@qq.com'''
 
 from pathlib import Path
 import json
@@ -192,15 +196,15 @@ def logister():
 
 def main():
     initLog()
+    print(TIPS_INFO)
+    log('程序启动。')
     try:
         with open(rootPath / 'users.json'):
             pass
     except FileNotFoundError:
-        log('用户数据文件不存在。')
-        log('程序退出。')
-        exit()
-    print(TIPS_INFO)
-    log('程序启动。')
+        log('用户数据文件不存在，正在创建。')
+        with open(rootPath / 'users.json', 'w') as file:
+            json.dump({}, file, indent=4, sort_keys=True)
     logister()
     readInfo()
     log('数据文件加载。')
