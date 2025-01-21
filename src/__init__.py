@@ -1,6 +1,6 @@
 #!python3
 
-__version__ = '1.5.0'
+__version__ = '1.8.1'
 TIPS_INFO = f'''Item Management System(IMS) V{__version__}
 Made by zhilin.tang@qq.com
 
