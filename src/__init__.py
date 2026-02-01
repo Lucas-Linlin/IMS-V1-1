@@ -1,80 +1,121 @@
-#!python3
+from time import time
+from datetime import datetime
+import os
+import json
+from pathlib import Path
 
-__version__ = '1.8.1'
-TIPS_INFO = f'''Item Management System(IMS) V{__version__}
+__version__ = '1.8.3'
+TIPS_INFO = f"""Item Management System(IMS) V{__version__}
 Made by zhilin.tang@qq.com
 
 仓储物品管理系统(物品管家) V{__version__}
-作者：zhilin.tang@qq.com'''
+作者：zhilin.tang@qq.com"""
 
-from pathlib import Path
-import json
-import os
-import bcrypt
-from datetime import datetime
-from time import time
 
-rootPath = Path(__file__).parent
-things = {}
+rootPath: Path = Path(__file__).parent
+things: dict[str, dict[str, int]] = {}
+FILE: dict[str, dict] = {}
+LANG: dict[str, str]
 
-def initLog():
+
+class UserError(Exception):
+    pass
+
+
+def initLog() -> None:
     global START
     START = time()
     with open(rootPath / 'logs.log', 'w', encoding='utf-8') as file:
         file.write(f'程序在 {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 启动。\n')
 
-def log(log:str):
+
+def log(msg: str) -> None:
     current = time()
     elapsed = int((current - START) * 1000)
     with open(rootPath / 'logs.log', 'a', encoding='utf-8') as file:
-        file.write(f"[{elapsed} ms] {log}\n")
+        file.write(f'[{elapsed} ms] {msg}\n')
 
-def readInfo():
+
+def language() -> None:
+    global LANG
+    user_language = input(
+        'Choose language / 选择语言\n[E]nglish / [C]简体中文\n>>> '
+    ).lower()
+    if user_language == 'e':
+        with open(rootPath / 'lang' / 'en_us.json', encoding='utf-8') as file:
+            LANG = json.load(file)
+    elif user_language == 'c':
+        with open(rootPath / 'lang' / 'zh_cn.json', encoding='utf-8') as file:
+            LANG = json.load(file)
+
+
+def readInfo() -> None:
     global FILE, things, user
-    with open(rootPath / f'users.json') as file:
-        FILE = json.load(file)
-        things = FILE[user]["things"]
+    things = FILE[user]['things']
 
-def add(index, value):
+
+def saveFile() -> None:
+    with open(rootPath / 'users.json', 'w', encoding='utf-8') as file:
+        json.dump(FILE, file, indent=4, sort_keys=True)
+
+
+def hashPassword(psw: str) -> int:
+    s = 0
+    for j, i in enumerate(psw):
+        n = ord(i)
+        s += n*(37**j)
+        s %= (1e8+7)
+    return int(s)
+
+
+def add(index: str, value: str, count: int = 1) -> None:
     log(f'用户添加某物。')
-    global FILE, things, user
+    if count <= 0:
+        print(LANG['add.illegal_count'])
+        return
+    global things
     try:
-        things[index][value] += 1
+        things[index][value] += count
     except KeyError:
         try:
-            things[index]|={value:1}
+            things[index][value] = count
         except KeyError:
-            things[index] = {value:1}
-    FILE[user]["things"] = things
-    with open(rootPath / f'users.json', 'w') as file:
-        print(f'{value} 被添加到 {index}。')
+            things[index] = {value: count}
+    saveFile()
     log('添加成功。')
 
-def delete(index, value):
+
+def delete(index: str, value: str, count: int = 1) -> None:
     log(f'用户删除某物。')
+    if count <= 0:
+        print(LANG['delete.illegal_count'])
+        return
     global things, user
     if index not in things.keys():
-        print(f'索引 "{index}" 不存在。')
+        print(LANG['delete.index_does_not_exist'].format(index))
         return
     try:
-        things[index][value] -= 1
-        if things[index][value] == 0:
-            del things[index][value]
-        if len(things[index]) == 0:
-            del things[index]
+        if count <= things[index][value]:
+            things[index][value] -= count
+            if things[index][value] == 0:
+                del things[index][value]
+            if things[value] == {}:
+                del things[value]
+        else:
+            print(LANG['delete.not_enough_items'])
+            return
     except KeyError:
-        print(f'{value} 不在 {index} 中。')
+        print(LANG['delete.item_does_not_exist'].format(value, index))
         return
-    FILE[user]["things"] = things
-    with open(rootPath / f'users.json', 'w') as file:
-        json.dump(FILE, file, indent=4, sort_keys=True)
-    print(f'{value} 被从 {index} 中删除。')
+    print(LANG['delete.delete_successfully'].format(value, index))
+    saveFile()
     log('删除成功。')
 
-def search(value):
-    log(f'用户查询某物。')
+
+def search(value: str):
+    log('用户查询某物。')
     global things
-    found = {} # {address: count, ...}
+    found = {}
     returnStr = ''
     for i in things.keys():
         for j in things[i].keys():
@@ -83,28 +124,28 @@ def search(value):
                 returnStr += f'{i}: {things[i][j]}*{j}\n'
     if returnStr == '':
         log('无结果。')
-        print('无结果。')
-        return 0,''
+        print(LANG['search.no_result'])
     else:
         print(f'查询成功：')
-        print(returnStr[:-1])
-        log('查询成功。')
-    return len(found), returnStr
+        print(returnStr[:-1])  # 去掉换行
+        log(LANG['search.successfully'])
 
-def query(index):
+
+def query(index: str) -> None:
     log(f'用户查询某索引。')
     global things
     if index in things.keys():
         log('查询成功。')
-        print('-'*20)
+        print('-' * 20)
         for value in things[index].keys():
             print(f'{value}*{things[index][value]}')
-        print('-'*20)
+        print('-' * 20)
     else:
-        print(f'索引 "{index}" 不存在。')
+        print(LANG['query.index_does_not_exist'].format(index))
         log('无结果。')
 
-def display():
+
+def display() -> None:
     global things
     if len(things) == 0:
         print('无物品。')
@@ -116,12 +157,20 @@ def display():
             for value in things[index].keys():
                 print(f'    {value}*{things[index][value]}')
             print('------------')
-        print(f'共 {sum(sum(things[i].values()) for i in things.keys())} 个物品在 {len(things)} 个索引中。')
+        print(
+            LANG['display.msg'].format(
+                sum(sum(things[i].values()) for i in things.keys()), len(things))
+        )
 
-def login(usr:str, psw:str, num:int=3):
-    log(f'用户 {usr} 想要登录。')
-    with open(rootPath / 'users.json') as file:
-        users:dict = json.loads(file.read())
+
+def login(usr: str, psw: str, num: int = 3):
+    if usr not in FILE.keys():
+        print(LANG['login.usr_does_not_exist'])
+        raise UserError('User does not exist.')
+    if hashPassword(psw) == FILE[usr]['password']:
+        print(LANG['login.welcome'].format(usr))
+        print(LANG['main.help'])
+    """log(f'用户 {usr} 想要登录。')
     if usr in users.keys():
         if psw == users[usr]["password"]:
             log(f'用户 {usr} 登录成功。')
@@ -140,17 +189,18 @@ def login(usr:str, psw:str, num:int=3):
             print('用户名或密码错误。')
             usr = input('用户名：')
             psw = input('密码：')
-            login(usr, psw, num-1)      
+            login(usr, psw, num-1)
     else:
         if num == 0:
-                log(f'用户 {usr} 尝试3次，登录失败。')
-                print('尝试太多次了！')
-                log('程序退出。')
-                exit()
+            log(f'用户 {usr} 尝试3次，登录失败。')
+            print('尝试太多次了！')
+            log('程序退出。')
+            exit()
         print('用户名或密码错误。')
         usr = input('用户名：')
         psw = input('密码：')
-        login(usr, psw, num-1) 
+        login(usr, psw, num-1)"""
+
 
 def logister():
     global FILE, user
@@ -162,9 +212,12 @@ def logister():
             usr = input('用户名：')
             psw = input('密码：')
             user = usr
-            login(usr, psw)
+            try:
+                login(usr, psw)
+            except UserError:
+                logister()
             return
-        case 'r' |'register':
+        case 'r' | 'register':
             log('开始注册。')
             usr = input('用户名：')
             with open(rootPath / 'users.json') as file:
@@ -175,14 +228,13 @@ def logister():
             else:
                 psw = input('密码：')
                 confirm_psw = input('确认密码：')
-                if psw!= confirm_psw:
+                if psw != confirm_psw:
                     print('两次密码不匹配。')
                     log('注册失败。')
                     logister()
                 else:
-                    FILE[usr] = {"password": psw, "things": {}}
-                    with open(rootPath / f'users.json', 'w') as file:
-                        json.dump(FILE, file, indent=4, sort_keys=True)
+                    FILE[usr] = {'password': hashPassword(psw), 'things': {}}
+                    saveFile()
                     print('注册成功。')
                     user = usr
                     login(usr, psw)
@@ -194,10 +246,13 @@ def logister():
             print('输入不合法。')
             logister()
 
+
 def main():
+    global FILE
     initLog()
     print(TIPS_INFO)
     log('程序启动。')
+    language()
     try:
         with open(rootPath / 'users.json'):
             pass
@@ -205,6 +260,12 @@ def main():
         log('用户数据文件不存在，正在创建。')
         with open(rootPath / 'users.json', 'w') as file:
             json.dump({}, file, indent=4, sort_keys=True)
+    with open(rootPath / 'users.json', encoding='utf-8') as file:
+        try:
+            FILE = json.load(file)
+        except json.JSONDecodeError:
+            FILE = {}
+            saveFile()
     logister()
     readInfo()
     log('数据文件加载。')
@@ -222,9 +283,7 @@ def main():
                 except:
                     print('输入不合法。')
                     continue
-                else:
-                    for _ in range(count):
-                        add(index, value)
+                add(index, value, count)
 
             case 'delete' | 'dl' | 'dlt':
                 try:
@@ -234,11 +293,10 @@ def main():
                 except:
                     print('输入不合法。')
                     continue
-                else:
-                    for _ in range(count):
-                        delete(index, value)
 
-            case'search' | 's'| 'sc' | 'find' | 'fd' | 'f':
+                delete(index, value, count)
+
+            case 'search' | 's' | 'sc' | 'find' | 'fd' | 'f':
                 try:
                     value = input('物品：')
                 except:
@@ -255,25 +313,18 @@ def main():
                     continue
                 else:
                     query(index)
-            
+
             case 'clear' | 'cls':
                 os.system('cls')
 
             case 'display' | 'd' | 'dis':
                 display()
 
+            case 'l' | 'lang':
+                language()
+
             case 'help' | 'h':
-                print(f'''{TIPS_INFO}
-==================== 命 令 指 南 =======================
-                    add, a - 添加某物品到某索引。
-           delete, dl, dlt - 从某索引删除某物品。
-search, s, sc, find, fd, f - 查询某物品。
-                  query, q - 查询某索引。
-                clear, cls - 清屏。
-           display, d, dis - 显示所有物品。
-                   help, h - 显示这条帮助信息。
-                exit, quit - 退出程序。
-========================================================''')
+                print(f'{TIPS_INFO}\n{LANG['main.help']}')
 
             case 'exit' | 'quit':
                 log('程序结束。')
@@ -282,6 +333,7 @@ search, s, sc, find, fd, f - 查询某物品。
             case _:
                 print('输入不合法。')
                 continue
+
 
 if __name__ == '__main__':
     main()
