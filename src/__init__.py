@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 
-__version__ = '1.8.3'
+__version__ = '1.9.0'
 TIPS_INFO = f"""Item Management System(IMS) V{__version__}
 Made by zhilin.tang@qq.com
 
@@ -16,6 +16,7 @@ rootPath: Path = Path(__file__).parent
 things: dict[str, dict[str, int]] = {}
 FILE: dict[str, dict] = {}
 LANG: dict[str, str]
+login_num:int=3
 
 
 class UserError(Exception):
@@ -99,17 +100,18 @@ def delete(index: str, value: str, count: int = 1) -> None:
             things[index][value] -= count
             if things[index][value] == 0:
                 del things[index][value]
-            if things[value] == {}:
-                del things[value]
+            if things[index] == {}:
+                del things[index]
         else:
             print(LANG['delete.not_enough_items'])
             return
     except KeyError:
         print(LANG['delete.item_does_not_exist'].format(value, index))
         return
-    print(LANG['delete.delete_successfully'].format(value, index))
-    saveFile()
-    log('删除成功。')
+    else:
+        print(LANG['delete.delete_successfully'].format(value, index))
+        saveFile()
+        log('删除成功。')
 
 
 def search(value: str):
@@ -163,43 +165,22 @@ def display() -> None:
         )
 
 
-def login(usr: str, psw: str, num: int = 3):
+def login(usr: str, psw: str):
+    global login_num
     if usr not in FILE.keys():
         print(LANG['login.usr_does_not_exist'])
         raise UserError('User does not exist.')
     if hashPassword(psw) == FILE[usr]['password']:
         print(LANG['login.welcome'].format(usr))
         print(LANG['main.help'])
-    """log(f'用户 {usr} 想要登录。')
-    if usr in users.keys():
-        if psw == users[usr]["password"]:
-            log(f'用户 {usr} 登录成功。')
-            global user
-            user = usr
-            print('登录成功。')
-            print('欢迎,', user)
-            return
-        else:
-            if num == 0:
-                log(f'用户 {usr} 尝试3次，登录失败。')
-                print('尝试太多次了！')
-                log('程序退出。')
-                exit()
-            log(f'用户 {usr} 尝试 {num} 次，登录失败。')
-            print('用户名或密码错误。')
-            usr = input('用户名：')
-            psw = input('密码：')
-            login(usr, psw, num-1)
+        return
     else:
-        if num == 0:
-            log(f'用户 {usr} 尝试3次，登录失败。')
-            print('尝试太多次了！')
-            log('程序退出。')
+        login_num-=1
+        print(LANG['login.wrong_password'])
+        print(LANG['login.failed'].format(login_num))
+        if login_num==0:
             exit()
-        print('用户名或密码错误。')
-        usr = input('用户名：')
-        psw = input('密码：')
-        login(usr, psw, num-1)"""
+        logister()
 
 
 def logister():
@@ -209,8 +190,8 @@ def logister():
     match choice.lower():
         case 'l' | 'login':
             log('开始登录。')
-            usr = input('用户名：')
-            psw = input('密码：')
+            usr = input(LANG['logister.username'])
+            psw = input(LANG['logister.password'])
             user = usr
             try:
                 login(usr, psw)
@@ -219,23 +200,23 @@ def logister():
             return
         case 'r' | 'register':
             log('开始注册。')
-            usr = input('用户名：')
+            usr = input(LANG['logister.username'])
             with open(rootPath / 'users.json') as file:
                 FILE = json.load(file)
             if usr.lower() in (i.lower() for i in FILE.keys()):
-                print('用户名已存在。')
+                print(LANG['logister.user_has_exist'])
                 logister()
             else:
-                psw = input('密码：')
-                confirm_psw = input('确认密码：')
+                psw = input(LANG['logister.password'])
+                confirm_psw = input(LANG['logister.confirm_password'])
                 if psw != confirm_psw:
-                    print('两次密码不匹配。')
+                    print(LANG['logister.password_not_match'])
                     log('注册失败。')
                     logister()
                 else:
                     FILE[usr] = {'password': hashPassword(psw), 'things': {}}
                     saveFile()
-                    print('注册成功。')
+                    print(LANG['logister.welcome'])
                     user = usr
                     login(usr, psw)
                     return
@@ -243,7 +224,7 @@ def logister():
             log('程序结束。')
             exit()
         case _:
-            print('输入不合法。')
+            print(LANG['main.illegal_input'])
             logister()
 
 
@@ -277,39 +258,39 @@ def main():
         match command.lower():
             case 'add' | 'a':
                 try:
-                    index = input('索引：')
-                    value = input('物品：')
-                    count = int(input('数量：'))
+                    index = input(LANG['main.index'])
+                    value = input(LANG['main.value'])
+                    count = int(input(LANG['main.count']))
                 except:
-                    print('输入不合法。')
+                    print(LANG['main.illegal_input'])
                     continue
                 add(index, value, count)
 
             case 'delete' | 'dl' | 'dlt':
                 try:
-                    index = input('索引：')
-                    value = input('物品：')
-                    count = int(input('数量：'))
+                    index = input(LANG['main.index'])
+                    value = input(LANG['main.value'])
+                    count = int(input(LANG['main.count']))
                 except:
-                    print('输入不合法。')
+                    print(LANG['main.illegal_input'])
                     continue
 
                 delete(index, value, count)
 
             case 'search' | 's' | 'sc' | 'find' | 'fd' | 'f':
                 try:
-                    value = input('物品：')
+                    value = input(LANG['main.value'])
                 except:
-                    print('输入不合法。')
+                    print(LANG['main.illegal_input'])
                     continue
                 else:
                     search(value)
 
             case 'query' | 'q':
                 try:
-                    index = input('索引：')
+                    index = input(LANG['main.index'])
                 except:
-                    print('输入不合法。')
+                    print(LANG['main.illegal_input'])
                     continue
                 else:
                     query(index)
@@ -331,7 +312,7 @@ def main():
                 keep_going = False
 
             case _:
-                print('输入不合法。')
+                print(LANG['main.illegal_input'])
                 continue
 
 
