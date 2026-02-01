@@ -128,7 +128,7 @@ def search(value: str):
         log('无结果。')
         print(LANG['search.no_result'])
     else:
-        print(f'查询成功：')
+        print(LANG['search.successfully'])
         print(returnStr[:-1])  # 去掉换行
         log(LANG['search.successfully'])
 
@@ -150,7 +150,7 @@ def query(index: str) -> None:
 def display() -> None:
     global things
     if len(things) == 0:
-        print('无物品。')
+        print(LANG['display.none'])
         return
     else:
         print('------------')
@@ -185,7 +185,7 @@ def login(usr: str, psw: str):
 
 def logister():
     global FILE, user
-    print('请选择([l]登录 / [r]注册 / [e]退出)：')
+    print(LANG['logister.hint'])
     choice = input('>>> ')
     match choice.lower():
         case 'l' | 'login':
