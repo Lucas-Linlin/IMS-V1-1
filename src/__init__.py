@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 
-__version__ = '1.9.0'
+__version__ = '1.10.0-test-20260205'
 TIPS_INFO = f"""Item Management System(IMS) V{__version__}
 Made by zhilin.tang@qq.com
 
@@ -20,6 +20,8 @@ login_num:int=3
 
 
 class UserError(Exception):
+    pass
+class BarcodeError(Exception):
     pass
 
 
@@ -68,6 +70,37 @@ def hashPassword(psw: str) -> int:
         s %= (1e8+7)
     return int(s)
 
+def _checkBarcode(code:str)->bool:
+    if(len(code)!=8):
+        return False
+    try:
+        a = 3*(
+            int(code[0])+
+            int(code[2])+
+            int(code[4])+
+            int(code[6])
+        )
+        b = (
+            int(code[1])+
+            int(code[3])+
+            int(code[5])+
+            int(code[7])
+        )
+    except:
+        return False
+    if (a + b) % 10 == 0:
+        return True
+    else:
+        return False
+
+def getLocation(index:str)->str:
+    if not _checkBarcode(index):
+        raise BarcodeError
+    place = index[0:3]
+    level = index[3:5]
+    order = index[5:]
+    returnStr = f'{FILE[user]['places'][place]} {int(level)} 层 第 {int(order)} 个容器'
+    return returnStr
 
 def add(index: str, value: str, count: int = 1) -> None:
     log(f'用户添加某物。')
@@ -123,7 +156,10 @@ def search(value: str):
         for j in things[i].keys():
             if value.lower() in j.lower():
                 found[i] = things[i][j]
-                returnStr += f'{i}: {things[i][j]}*{j}\n'
+                try:
+                    returnStr += f'{i} [{getLocation(i):17}]: {things[i][j]}*{j}\n'
+                except BarcodeError:
+                    returnStr += f'{i} [{LANG['getLocation.unknown_place']}]: {things[i][j]}*{j}\n'
     if returnStr == '':
         log('无结果。')
         print(LANG['search.no_result'])
