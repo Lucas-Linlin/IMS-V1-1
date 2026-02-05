@@ -1,4 +1,5 @@
 {
+    "getLocation.unknown":"未知的位置",
     "add.illegal_count": "非法的数量！",
     "delete.illegal_count": "非法的数量！",
     "delete.index_does_not_exist": "索引 \"{0}\" 不存在。",
