@@ -3,8 +3,9 @@ from datetime import datetime
 import os
 import json
 from pathlib import Path
+from copy import deepcopy
 
-__version__ = '1.10.0-test-20260205'
+__version__ = '1.10.0-test-20260206'
 TIPS_INFO = f"""Item Management System(IMS) V{__version__}
 Made by zhilin.tang@qq.com
 
@@ -16,11 +17,13 @@ rootPath: Path = Path(__file__).parent
 things: dict[str, dict[str, int]] = {}
 FILE: dict[str, dict] = {}
 LANG: dict[str, str]
-login_num:int=3
+login_num: int = 3
 
 
 class UserError(Exception):
     pass
+
+
 class BarcodeError(Exception):
     pass
 
@@ -50,6 +53,9 @@ def language() -> None:
     elif user_language == 'c':
         with open(rootPath / 'lang' / 'zh_cn.json', encoding='utf-8') as file:
             LANG = json.load(file)
+    else:
+        print(LANG['main.illegal_input'])
+        language()
 
 
 def readInfo() -> None:
@@ -70,20 +76,21 @@ def hashPassword(psw: str) -> int:
         s %= (1e8+7)
     return int(s)
 
-def _checkBarcode(code:str)->bool:
-    if(len(code)!=8):
+
+def _checkBarcode(code: str) -> bool:
+    if (len(code) != 8):
         return False
     try:
         a = 3*(
-            int(code[0])+
-            int(code[2])+
-            int(code[4])+
+            int(code[0]) +
+            int(code[2]) +
+            int(code[4]) +
             int(code[6])
         )
         b = (
-            int(code[1])+
-            int(code[3])+
-            int(code[5])+
+            int(code[1]) +
+            int(code[3]) +
+            int(code[5]) +
             int(code[7])
         )
     except:
@@ -93,7 +100,8 @@ def _checkBarcode(code:str)->bool:
     else:
         return False
 
-def getLocation(index:str)->str:
+
+def getLocation(index: str) -> str:
     if not _checkBarcode(index):
         raise BarcodeError
     place = index[0:3]
@@ -101,6 +109,40 @@ def getLocation(index:str)->str:
     order = index[5:]
     returnStr = f'{FILE[user]['places'][place]} {int(level)} 层 第 {int(order)} 个容器'
     return returnStr
+
+
+def accountManage() -> None:
+    global user
+    print(LANG['account.help'])
+    while 1:
+        command = input('##> ')
+        match command:
+            case 'psw' | 'p':
+                password = input(LANG['logister.password'])
+                confirm_password = input(LANG['logister.confirm_password'])
+                if password == confirm_password:
+                    print(LANG['account.successful_password'])
+                    FILE[user]['password'] = hashPassword(password)
+                    saveFile()
+                else:
+                    print(LANG['logister.password_not_match'])
+                    return
+            case 'user' | 'usr' | 'u' | 'name':
+                username = input(LANG['logister.username'])
+                if username in FILE.keys():
+                    print(LANG['logister.user_has_exist'])
+                    return
+                else:
+                    FILE[username] = deepcopy(FILE[user])
+                    del FILE[user]
+                    user = username
+                    return
+            case 'exit' | 'quit' | 'q':
+                return
+            case _:
+                print(LANG['main.illegal_input'])
+                continue
+
 
 def add(index: str, value: str, count: int = 1) -> None:
     log(f'用户添加某物。')
@@ -211,10 +253,10 @@ def login(usr: str, psw: str):
         print(LANG['main.help'])
         return
     else:
-        login_num-=1
+        login_num -= 1
         print(LANG['login.wrong_password'])
         print(LANG['login.failed'].format(login_num))
-        if login_num==0:
+        if login_num == 0:
             exit()
         logister()
 
@@ -337,6 +379,9 @@ def main():
             case 'display' | 'd' | 'dis':
                 display()
 
+            case 'account' | 'ac' | 'zh':
+                accountManage()
+
             case 'l' | 'lang':
                 language()
 
@@ -346,6 +391,9 @@ def main():
             case 'exit' | 'quit':
                 log('程序结束。')
                 keep_going = False
+
+            case '':
+                continue
 
             case _:
                 print(LANG['main.illegal_input'])
