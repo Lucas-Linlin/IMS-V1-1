@@ -28,6 +28,17 @@ class BarcodeError(Exception):
     pass
 
 
+def text(code: str, *args, newline: bool = False) -> str:
+    if newline:
+        s = '\n'.join(LANG[code])
+    else:
+        s = LANG[code]
+    try:
+        return s.format(args)
+    except:
+        return s
+
+
 def initLog() -> None:
     global START
     START = time()
@@ -54,7 +65,7 @@ def language() -> None:
         with open(rootPath / 'lang' / 'zh_cn.json', encoding='utf-8') as file:
             LANG = json.load(file)
     else:
-        print(LANG['main.illegal_input'])
+        print(text('main.illegal_input'))
         language()
 
 
@@ -113,41 +124,43 @@ def getLocation(index: str) -> str:
 
 def accountManage() -> None:
     global user
-    print(LANG['account.help'])
+    print(text('account.help', newline=True))
     while 1:
         command = input('##> ')
         match command:
             case 'psw' | 'p':
-                password = input(LANG['logister.password'])
-                confirm_password = input(LANG['logister.confirm_password'])
+                password = input(text('logister.password'))
+                confirm_password = input(text('logister.confirm_password'))
                 if password == confirm_password:
-                    print(LANG['account.successful_password'])
+                    print(text('account.successful_password'))
                     FILE[user]['password'] = hashPassword(password)
                     saveFile()
                 else:
-                    print(LANG['logister.password_not_match'])
+                    print(text('logister.password_not_match'))
                     return
             case 'user' | 'usr' | 'u' | 'name':
-                username = input(LANG['logister.username'])
+                username = input(text('logister.username'))
                 if username in FILE.keys():
-                    print(LANG['logister.user_has_exist'])
+                    print(text('logister.user_has_exist'))
                     return
                 else:
                     FILE[username] = deepcopy(FILE[user])
                     del FILE[user]
                     user = username
                     return
+            case 'index' | 'idx' | 'i':
+                pass
             case 'exit' | 'quit' | 'q':
                 return
             case _:
-                print(LANG['main.illegal_input'])
+                print(text('main.illegal_input'))
                 continue
 
 
 def add(index: str, value: str, count: int = 1) -> None:
     log(f'用户添加某物。')
     if count <= 0:
-        print(LANG['add.illegal_count'])
+        print(text('add.illegal_count'))
         return
     global things
     try:
@@ -164,11 +177,11 @@ def add(index: str, value: str, count: int = 1) -> None:
 def delete(index: str, value: str, count: int = 1) -> None:
     log(f'用户删除某物。')
     if count <= 0:
-        print(LANG['delete.illegal_count'])
+        print(text('delete.illegal_count'))
         return
     global things, user
     if index not in things.keys():
-        print(LANG['delete.index_does_not_exist'].format(index))
+        print(text('delete.index_does_not_exist', index))
         return
     try:
         if count <= things[index][value]:
@@ -178,13 +191,13 @@ def delete(index: str, value: str, count: int = 1) -> None:
             if things[index] == {}:
                 del things[index]
         else:
-            print(LANG['delete.not_enough_items'])
+            print(text('delete.not_enough_items'))
             return
     except KeyError:
-        print(LANG['delete.item_does_not_exist'].format(value, index))
+        print(text('delete.item_does_not_exist', value, index))
         return
     else:
-        print(LANG['delete.delete_successfully'].format(value, index))
+        print(text('delete.delete_successfully', value, index))
         saveFile()
         log('删除成功。')
 
@@ -201,14 +214,14 @@ def search(value: str):
                 try:
                     returnStr += f'{i} [{getLocation(i):17}]: {things[i][j]}*{j}\n'
                 except BarcodeError:
-                    returnStr += f'{i} [{LANG['getLocation.unknown_place']}]: {things[i][j]}*{j}\n'
+                    returnStr += f'{i} [{text('getLocation.unknown_place')}]: {things[i][j]}*{j}\n'
     if returnStr == '':
         log('无结果。')
-        print(LANG['search.no_result'])
+        print(text('search.no_result'))
     else:
-        print(LANG['search.successfully'])
+        print(text('search.successfully'))
         print(returnStr[:-1])  # 去掉换行
-        log(LANG['search.successfully'])
+        log(text('search.successfully'))
 
 
 def query(index: str) -> None:
@@ -221,14 +234,14 @@ def query(index: str) -> None:
             print(f'{value}*{things[index][value]}')
         print('-' * 20)
     else:
-        print(LANG['query.index_does_not_exist'].format(index))
+        print(text('query.index_does_not_exist', index))
         log('无结果。')
 
 
 def display() -> None:
     global things
     if len(things) == 0:
-        print(LANG['display.none'])
+        print(text('display.none'))
         return
     else:
         print('------------')
@@ -238,24 +251,24 @@ def display() -> None:
                 print(f'    {value}*{things[index][value]}')
             print('------------')
         print(
-            LANG['display.msg'].format(
-                sum(sum(things[i].values()) for i in things.keys()), len(things))
+            text('display.msg',
+                 sum(sum(things[i].values()) for i in things.keys()), len(things))
         )
 
 
 def login(usr: str, psw: str):
     global login_num
     if usr not in FILE.keys():
-        print(LANG['login.usr_does_not_exist'])
+        print(text('login.usr_does_not_exist'))
         raise UserError('User does not exist.')
     if hashPassword(psw) == FILE[usr]['password']:
-        print(LANG['login.welcome'].format(usr))
-        print(LANG['main.help'])
+        print(text('login.welcome', usr))
+        print(text('main.help', newline=True))
         return
     else:
         login_num -= 1
-        print(LANG['login.wrong_password'])
-        print(LANG['login.failed'].format(login_num))
+        print(text('login.wrong_password'))
+        print(text('login.failed', login_num))
         if login_num == 0:
             exit()
         logister()
@@ -263,13 +276,13 @@ def login(usr: str, psw: str):
 
 def logister():
     global FILE, user
-    print(LANG['logister.hint'])
+    print(text('logister.hint'))
     choice = input('>>> ')
     match choice.lower():
         case 'l' | 'login':
             log('开始登录。')
-            usr = input(LANG['logister.username'])
-            psw = input(LANG['logister.password'])
+            usr = input(text('logister.username'))
+            psw = input(text('logister.password'))
             user = usr
             try:
                 login(usr, psw)
@@ -278,23 +291,23 @@ def logister():
             return
         case 'r' | 'register':
             log('开始注册。')
-            usr = input(LANG['logister.username'])
+            usr = input(text('logister.username'))
             with open(rootPath / 'users.json') as file:
                 FILE = json.load(file)
             if usr.lower() in (i.lower() for i in FILE.keys()):
-                print(LANG['logister.user_has_exist'])
+                print(text('logister.user_has_exist'))
                 logister()
             else:
-                psw = input(LANG['logister.password'])
-                confirm_psw = input(LANG['logister.confirm_password'])
+                psw = input(text('logister.password'))
+                confirm_psw = input(text('logister.confirm_password'))
                 if psw != confirm_psw:
-                    print(LANG['logister.password_not_match'])
+                    print(text('logister.password_not_match'))
                     log('注册失败。')
                     logister()
                 else:
                     FILE[usr] = {'password': hashPassword(psw), 'things': {}}
                     saveFile()
-                    print(LANG['logister.welcome'])
+                    print(text('logister.welcome'))
                     user = usr
                     login(usr, psw)
                     return
@@ -302,7 +315,7 @@ def logister():
             log('程序结束。')
             exit()
         case _:
-            print(LANG['main.illegal_input'])
+            print(text('main.illegal_input'))
             logister()
 
 
@@ -336,39 +349,39 @@ def main():
         match command.lower():
             case 'add' | 'a':
                 try:
-                    index = input(LANG['main.index'])
-                    value = input(LANG['main.value'])
-                    count = int(input(LANG['main.count']))
+                    index = input(text('main.index'))
+                    value = input(text('main.value'))
+                    count = int(input(text('main.count')))
                 except:
-                    print(LANG['main.illegal_input'])
+                    print(text('main.illegal_input'))
                     continue
                 add(index, value, count)
 
             case 'delete' | 'dl' | 'dlt':
                 try:
-                    index = input(LANG['main.index'])
-                    value = input(LANG['main.value'])
-                    count = int(input(LANG['main.count']))
+                    index = input(text('main.index'))
+                    value = input(text('main.value'))
+                    count = int(input(text('main.count')))
                 except:
-                    print(LANG['main.illegal_input'])
+                    print(text('main.illegal_input'))
                     continue
 
                 delete(index, value, count)
 
             case 'search' | 's' | 'sc' | 'find' | 'fd' | 'f':
                 try:
-                    value = input(LANG['main.value'])
+                    value = input(text('main.value'))
                 except:
-                    print(LANG['main.illegal_input'])
+                    print(text('main.illegal_input'))
                     continue
                 else:
                     search(value)
 
             case 'query' | 'q':
                 try:
-                    index = input(LANG['main.index'])
+                    index = input(text('main.index'))
                 except:
-                    print(LANG['main.illegal_input'])
+                    print(text('main.illegal_input'))
                     continue
                 else:
                     query(index)
@@ -386,7 +399,7 @@ def main():
                 language()
 
             case 'help' | 'h':
-                print(f'{TIPS_INFO}\n{LANG['main.help']}')
+                print(f'{TIPS_INFO}\n{text('main.help', newline=True)}')
 
             case 'exit' | 'quit':
                 log('程序结束。')
@@ -396,7 +409,7 @@ def main():
                 continue
 
             case _:
-                print(LANG['main.illegal_input'])
+                print(text('main.illegal_input'))
                 continue
 
 

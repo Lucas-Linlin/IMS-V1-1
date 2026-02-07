@@ -1,7 +1,13 @@
 {
     "getLocation.unknown": "Unknown",
     "account.successful_password": "Successfully changed your password!",
-    "account.help": "================= Account Settings =================\n                    psw, p - Change password.\n       user, usr, u, name - Change username.\n            exit, quit, q - Exit account settings.\n=====================================================",
+    "account.help": [
+        "================= Account Settings =================",
+        "                   psw, p - Change password.",
+        "       user, usr, u, name - Change username.",
+        "            exit, quit, q - Exit account settings.",
+        "====================================================="
+    ],
     "add.illegal_count": "Illegal count!",
     "delete.illegal_count": "Illegal count!",
     "delete.index_does_not_exist": "Index \"{0}\" does not exist.",
@@ -28,5 +34,17 @@
     "main.index": "Index: ",
     "main.value": "Item : ",
     "main.count": "Count: ",
-    "main.help": "======================== Command manual ========================\n                      add, a - Add some items to an index.\n             delete, dl, dlt - Delete some items from an index.\n  search, s, sc, find, fd, f - Search where something is.\n                    query, q - Show things in an index.\n                  clear, cls - Clear the screen.\n             display, d, dis - Display all items in all indexes.\n                     l, lang - Toggle language.\n                     help, h - Show this help message.\n                  exit, quit - Quit the program.\n================================================================"
+    "main.help": [
+        "======================== Command manual ========================",
+        "                      add, a - Add some items to an index.",
+        "             delete, dl, dlt - Delete some items from an index.",
+        "  search, s, sc, find, fd, f - Search where something is.",
+        "                    query, q - Show things in an index.",
+        "                  clear, cls - Clear the screen.",
+        "             display, d, dis - Display all items in all indexes.",
+        "                     l, lang - Toggle language.",
+        "                     help, h - Show this help message.",
+        "                  exit, quit - Quit the program.",
+        "================================================================"
+    ]
 }
